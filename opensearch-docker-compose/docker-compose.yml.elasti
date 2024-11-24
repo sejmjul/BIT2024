@@ -1,0 +1,152 @@
+version: '3.7'
+
+services:
+
+  os01:
+    # Your existing os01 configuration remains unchanged
+    restart: always
+    image: opensearchproject/opensearch:2.18.0
+    container_name: os01
+    environment:
+      OPENSEARCH_JAVA_OPTS: "-Xms1024m -Xmx1024m"
+      node.name: os01
+      discovery.seed_hosts: os01,os02,os03
+      cluster.initial_master_nodes: os01,os02,os03
+      plugins.security.ssl.transport.pemkey_filepath: certificates/os01/os01.key
+      plugins.security.ssl.transport.pemcert_filepath: certificates/os01/os01.pem
+      plugins.security.ssl.http.pemkey_filepath: certificates/os01/os01.key
+      plugins.security.ssl.http.pemcert_filepath: certificates/os01/os01.pem
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      JAVA_HOME: /usr/share/opensearch/jdk
+      bootstrap.memory_lock: "true"
+      network.host: "0.0.0.0"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - "./opensearch.yml:/usr/share/opensearch/config/opensearch.yml"
+      - "os-data1:/usr/share/opensearch/data"
+      - "./certs:/usr/share/opensearch/config/certificates:ro"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+    ports:
+      - 9200:9200
+      - 9600:9600
+
+  os02:
+    # Your existing os02 configuration remains unchanged
+    restart: always
+    image: opensearchproject/opensearch:2.18.0
+    container_name: os02
+    environment:
+      OPENSEARCH_JAVA_OPTS: "-Xms1024m -Xmx1024m"
+      node.name: os02
+      discovery.seed_hosts: os01,os02,os03
+      cluster.initial_master_nodes: os01,os02,os03
+      plugins.security.ssl.transport.pemkey_filepath: certificates/os02/os02.key
+      plugins.security.ssl.transport.pemcert_filepath: certificates/os02/os02.pem
+      plugins.security.ssl.http.pemkey_filepath: certificates/os02/os02.key
+      plugins.security.ssl.http.pemcert_filepath: certificates/os02/os02.pem
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      JAVA_HOME: /usr/share/opensearch/jdk
+      bootstrap.memory_lock: "true"
+      network.host: "0.0.0.0"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - "./opensearch.yml:/usr/share/opensearch/config/opensearch.yml"
+      - "os-data2:/usr/share/opensearch/data"
+      - "./certs:/usr/share/opensearch/config/certificates:ro"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+
+  os03:
+    # Your existing os03 configuration remains unchanged
+    restart: always
+    image: opensearchproject/opensearch:2.18.0
+    container_name: os03
+    environment:
+      OPENSEARCH_JAVA_OPTS: "-Xms1024m -Xmx1024m"
+      node.name: os03
+      discovery.seed_hosts: os01,os02,os03
+      cluster.initial_master_nodes: os01,os02,os03
+      plugins.security.ssl.transport.pemkey_filepath: certificates/os03/os03.key
+      plugins.security.ssl.transport.pemcert_filepath: certificates/os03/os03.pem
+      plugins.security.ssl.http.pemkey_filepath: certificates/os03/os03.key
+      plugins.security.ssl.http.pemcert_filepath: certificates/os03/os03.pem
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      JAVA_HOME: /usr/share/opensearch/jdk
+      bootstrap.memory_lock: "true"
+      network.host: "0.0.0.0"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - "./opensearch.yml:/usr/share/opensearch/config/opensearch.yml"
+      - "os-data3:/usr/share/opensearch/data"
+      - "./certs:/usr/share/opensearch/config/certificates:ro"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+
+  opensearch-dashboards:
+    # Your existing opensearch-dashboards configuration remains unchanged
+    restart: always
+    image: opensearchproject/opensearch-dashboards:2.18.0
+    container_name: opensearch-dashboards
+    environment:
+      OPENSEARCH_HOSTS: '["https://os01:9200","https://os02:9200","https://os03:9200"]'
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      SERVER_HOST: "0.0.0.0"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "1"
+    volumes:
+      - "./certs:/usr/share/opensearch-dashboards/config/certificates:ro"
+      - "./opensearch-dashboards.yml:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml"
+    ports:
+      - 443:5601
+
+  elastiflow:
+    image: elastiflow/elastiflow:6.1.0
+    container_name: elastiflow
+    environment:
+      - ELASTIFLOW_ES_HOST=os01:9200,os02:9200,os03:9200  # OpenSearch hosts
+      - ELASTIFLOW_ES_USER=admin                          # Replace with your OpenSearch username
+      - ELASTIFLOW_ES_PASS=admin                          # Replace with your OpenSearch password
+      - ELASTIFLOW_FLOW_PROTOCOLS=ipfix
+      - ELASTIFLOW_IPFIX_UDP_PORT=8055                    # Set IPFIX port to 8055
+      - ELASTIFLOW_ES_SSL_ENABLED=true                    # Enable if your OpenSearch uses SSL/TLS
+      - ELASTIFLOW_ES_SSL_VERIFY=false                    # Set to true if using valid certificates
+    volumes:
+      - elastiflow-data:/var/lib/elastiflow
+      - elastiflow-config:/etc/elastiflow
+      - "./certs:/certs:ro"  # Mount your SSL certificates if needed
+    ports:
+      - "8055:8055/udp"  # IPFIX port mapping
+    depends_on:
+      - os01
+      - os02
+      - os03
+
+volumes:
+  os-data1:
+  os-data2:
+  os-data3:
+  elastiflow-data:
+  elastiflow-config:
+

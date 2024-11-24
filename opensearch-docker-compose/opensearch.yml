@@ -1,0 +1,32 @@
+cluster.name: os-cluster
+network.host: 0.0.0.0
+
+bootstrap.memory_lock: "true"  # Disables swapping
+
+cluster.routing.allocation.disk.threshold_enabled: true
+cluster.routing.allocation.disk.watermark.low: 93%
+cluster.routing.allocation.disk.watermark.high: 95%
+
+# Enable demo certificates for testing (remove for production)
+plugins.security.allow_unsafe_democertificates: true
+
+# HTTP layer SSL configuration
+plugins.security.ssl.http.enabled: true
+plugins.security.ssl.http.pemtrustedcas_filepath: certificates/ca/ca.pem
+
+# Transport layer SSL configuration
+plugins.security.ssl.transport.enabled: true
+plugins.security.ssl.transport.pemtrustedcas_filepath: certificates/ca/ca.pem
+plugins.security.ssl.transport.pemcert_filepath: certificates/nodes/node1.pem
+plugins.security.ssl.transport.pemkey_filepath: certificates/nodes/node1.key
+plugins.security.ssl.transport.enforce_hostname_verification: false
+
+# Admin DN - this should be a distinct certificate for the admin
+plugins.security.authcz.admin_dn:
+  - "CN=ADMIN,O=FIIT,L=BRATISLAVA,ST=BA,C=SK"
+
+# Node DNs - these should be distinct for each node certificate
+plugins.security.nodes_dn:
+  - "CN=os01,O=FIIT,L=BRATISLAVA,ST=BA,C=SK"
+  - "CN=os02,O=FIIT,L=BRATISLAVA,ST=BA,C=SK"
+  - "CN=os03,O=FIIT,L=BRATISLAVA,ST=BA,C=SK"
