@@ -22,7 +22,6 @@ GMAIL_IMAP_SERVER = "imap.gmail.com"
 USERNAME = "USERNAME"
 PASSWORD = "PASSWORD"
 #SEARCH_SUBJECT = "TOP IPs ADS"
-SEARCH_SUBJECT = "Nexus Mods"
 ATTACHMENT_FOLDER = "attachments"
 def clean(text):
     # Clean text for creating a folder or saving a file
